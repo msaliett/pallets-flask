@@ -9,7 +9,7 @@ config:
 classDiagram
 direction LR
     class User {
-	    +int id
+	    +id: int
 	    +String username
 	    +String password
 	    +register()
