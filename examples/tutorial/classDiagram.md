@@ -10,18 +10,18 @@ classDiagram
 direction LR
     class User {
 	    +id: int
-	    +String username
-	    +String password
+	    +username: String
+	    +password:String
 	    +register()
 	    +login()
     }
 
     class Post {
-	    +int id
-	    +int author_id
-	    +Timestamp created
-	    +String title
-	    +String body
+	    +id: int
+	    +author_id: int
+	    +created: Timestamp
+	    +title: String 
+	    +body: String 
 	    +create()
 	    +update()
 	    +delete()
