@@ -74,10 +74,25 @@ def test_create_update_validate(client, auth, path):
 
 def test_delete(client, auth, app):
     auth.login()
+    response = client.get("/1/delete")
+    assert response.status_code == 200
+    assert b"Delete post?" in response.data
+    assert b"Cancel" in response.data
+
     response = client.post("/1/delete")
+    assert response.status_code == 200
+
+    with app.app_context():
+        post = get_db().execute("SELECT * FROM post WHERE id = 1").fetchone()
+        assert post is not None
+
+    response = client.post("/1/delete", data={"confirm": "yes"})
     assert response.headers["Location"] == "/"
 
     with app.app_context():
         db = get_db()
         post = db.execute("SELECT * FROM post WHERE id = 1").fetchone()
         assert post is None
+
+    response = client.get("/")
+    assert b"Post deleted." in response.data

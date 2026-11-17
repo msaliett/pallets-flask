@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Delete post?{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <p>Are you sure you want to delete "{{ post['title'] }}"?</p>
+  <form method="post">
+    <input type="hidden" name="confirm" value="yes">
+    <input class="danger" type="submit" value="Delete">
+  </form>
+  <a href="{{ url_for('blog.update', id=post['id']) }}">Cancel</a>
+{% endblock %}

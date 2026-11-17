@@ -165,7 +165,7 @@ force-single-line = true
 order-by-type = false
 
 [tool.codespell]
-ignore-words-list = "te"
+ignore-words-list = "te,autor"
 
 [tool.tox]
 env_list = [

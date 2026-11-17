@@ -110,16 +110,20 @@ def update(id):
     return render_template("blog/update.html", post=post)
 
 
-@bp.route("/<int:id>/delete", methods=("POST",))
+@bp.route("/<int:id>/delete", methods=("GET", "POST"))
 @login_required
 def delete(id):
-    """Delete a post.
+    """Show a delete confirmation, then delete a post."""
+    post = get_post(id)
 
-    Ensures that the post exists and that the logged in user is the
-    author of the post.
-    """
-    get_post(id)
+    if request.method == "GET":
+        return render_template("blog/delete.html", post=post)
+
+    if request.form.get("confirm") != "yes":
+        return render_template("blog/delete.html", post=post)
+
     db = get_db()
     db.execute("DELETE FROM post WHERE id = ?", (id,))
     db.commit()
+    flash("Post deleted.")
     return redirect(url_for("blog.index"))

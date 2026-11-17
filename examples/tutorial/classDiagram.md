@@ -20,8 +20,8 @@ direction LR
 	    +id: int
 	    +author_id: int
 	    +created: Timestamp
-	    +title: String 
-	    +body: String 
+	    +title: String
+	    +body: String
 	    +create()
 	    +update()
 	    +delete()
