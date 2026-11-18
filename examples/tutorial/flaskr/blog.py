@@ -9,20 +9,51 @@ from werkzeug.exceptions import abort
 
 from .auth import login_required
 from .db import get_db
+from .db import normalize
 
 bp = Blueprint("blog", __name__)
+
+POSTS_PER_PAGE = 5
 
 
 @bp.route("/")
 def index():
-    """Show all the posts, most recent first."""
+    """Show posts matching the search, most recent first."""
     db = get_db()
+    query = request.args.get("q", "").strip()
+    page = max(request.args.get("page", 1, type=int) or 1, 1)
+    where = ""
+    parameters = []
+
+    if query:
+        normalized_query = normalize(query)
+        search = (
+            "%"
+            + normalized_query.replace("\\", "\\\\")
+            .replace("%", "\\%")
+            .replace("_", "\\_")
+            + "%"
+        )
+        where = " WHERE normalize(title) LIKE ? ESCAPE '\\'"
+        where += " OR normalize(body) LIKE ? ESCAPE '\\'"
+        parameters = [search, search]
+
+    total = db.execute(
+        "SELECT COUNT(*) FROM post p JOIN user u ON p.author_id = u.id" + where,
+        parameters,
+    ).fetchone()[0]
+    pages = (total + POSTS_PER_PAGE - 1) // POSTS_PER_PAGE
+    page = min(page, max(pages, 1))
     posts = db.execute(
         "SELECT p.id, title, body, created, author_id, username"
         " FROM post p JOIN user u ON p.author_id = u.id"
-        " ORDER BY created DESC"
+        + where
+        + " ORDER BY created DESC, p.id DESC LIMIT ? OFFSET ?",
+        parameters + [POSTS_PER_PAGE, (page - 1) * POSTS_PER_PAGE],
     ).fetchall()
-    return render_template("blog/index.html", posts=posts)
+    return render_template(
+        "blog/index.html", posts=posts, query=query, page=page, pages=pages
+    )
 
 
 def get_post(id, check_author=True):

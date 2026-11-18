@@ -37,6 +37,7 @@ response is sent.
     :caption: ``flaskr/db.py``
 
     import sqlite3
+    import unicodedata
     from datetime import datetime
 
     import click
@@ -50,8 +51,16 @@ response is sent.
                 detect_types=sqlite3.PARSE_DECLTYPES
             )
             g.db.row_factory = sqlite3.Row
+            g.db.create_function('normalize', 1, normalize)
 
         return g.db
+
+
+    def normalize(value):
+        normalized = unicodedata.normalize('NFKD', value).casefold()
+        return ''.join(
+            char for char in normalized if not unicodedata.combining(char)
+        )
 
 
     def close_db(e=None):
@@ -78,6 +87,9 @@ yet, and won't until you initialize the database later.
 
 :class:`sqlite3.Row` tells the connection to return rows that behave
 like dicts. This allows accessing the columns by name.
+
+The ``normalize`` function is registered with each connection so that
+SQLite can compare text without regard to case or accents.
 
 ``close_db`` checks if a connection was created by checking if ``g.db``
 was set. If the connection exists, it is closed. Further down you will

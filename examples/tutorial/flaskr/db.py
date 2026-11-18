@@ -1,4 +1,5 @@
 import sqlite3
+import unicodedata
 from datetime import datetime
 
 import click
@@ -16,8 +17,15 @@ def get_db():
             current_app.config["DATABASE"], detect_types=sqlite3.PARSE_DECLTYPES
         )
         g.db.row_factory = sqlite3.Row
+        g.db.create_function("normalize", 1, normalize)
 
     return g.db
+
+
+def normalize(value):
+    """Normalize text for case- and accent-insensitive searches."""
+    normalized = unicodedata.normalize("NFKD", value).casefold()
+    return "".join(char for char in normalized if not unicodedata.combining(char))
 
 
 def close_db(e=None):

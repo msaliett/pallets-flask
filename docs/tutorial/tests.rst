@@ -387,6 +387,24 @@ register. When logged in, there's a link to log out.
         assert b'by test on 2018-01-01' in response.data
         assert b'test\nbody' in response.data
         assert b'href="/1/update"' in response.data
+        assert b'name="q"' in response.data
+
+
+    def test_search(client, app):
+        with app.app_context():
+            db = get_db()
+            db.execute(
+                'INSERT INTO post (title, body, author_id) VALUES (?, ?, ?)',
+                ("Café de l'Été", 'Résumé of the post', 1)
+            )
+            db.commit()
+
+        assert 'Café de l'.encode() in client.get('/?q=ETE').data
+        assert 'Café de l'.encode() in client.get('/?q=RESUME').data
+
+
+    def test_search_no_results(client):
+        assert b'No posts found' in client.get('/?q=missing').data
 
 A user must be logged in to access the ``create``, ``update``, and
 ``delete`` views. The logged in user must be the author of the post to

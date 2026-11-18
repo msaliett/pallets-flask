@@ -49,6 +49,17 @@ nav ul  {
   padding: 0;
 }
 
+nav form {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0 1rem;
+}
+
+nav form input {
+  margin: 0;
+}
+
 nav ul li a, nav ul li span, header .action {
   display: block;
   padding: 0.5rem;
@@ -56,6 +67,12 @@ nav ul li a, nav ul li span, header .action {
 
 .content {
   padding: 0 1rem 1rem;
+}
+
+.content .pagination {
+  background: none;
+  padding: 0;
+  gap: 1rem;
 }
 
 .content > header {

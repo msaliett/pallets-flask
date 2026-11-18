@@ -27,6 +27,7 @@ Define the blueprint and register it in the application factory.
 
     from flaskr.auth import login_required
     from flaskr.db import get_db
+    from flaskr.db import normalize
 
     bp = Blueprint('blog', __name__)
 
@@ -71,20 +72,51 @@ Index
 
 The index will show all of the posts, most recent first. A ``JOIN`` is
 used so that the author information from the ``user`` table is
-available in the result.
+available in the result. The search term is normalized to ignore case
+and accents, and the results are paginated.
 
 .. code-block:: python
     :caption: ``flaskr/blog.py``
 
+    POSTS_PER_PAGE = 5
+
     @bp.route('/')
     def index():
+        query = request.args.get('q', '').strip()
+        page = max(request.args.get('page', 1, type=int) or 1, 1)
         db = get_db()
+        where = ''
+        parameters = []
+
+        if query:
+            normalized_query = normalize(query)
+            search = (
+                '%'
+                + normalized_query.replace('\\', '\\\\')
+                .replace('%', '\\%')
+                .replace('_', '\\_')
+                + '%'
+            )
+            where = " WHERE normalize(title) LIKE ? ESCAPE '\\'"
+            where += " OR normalize(body) LIKE ? ESCAPE '\\'"
+            parameters = [search, search]
+
+        total = db.execute(
+            'SELECT COUNT(*) FROM post p JOIN user u ON p.author_id = u.id' + where,
+            parameters,
+        ).fetchone()[0]
+        pages = (total + POSTS_PER_PAGE - 1) // POSTS_PER_PAGE
+        page = min(page, max(pages, 1))
         posts = db.execute(
             'SELECT p.id, title, body, created, author_id, username'
             ' FROM post p JOIN user u ON p.author_id = u.id'
-            ' ORDER BY created DESC'
+            + where
+            + ' ORDER BY created DESC, p.id DESC LIMIT ? OFFSET ?',
+            parameters + [POSTS_PER_PAGE, (page - 1) * POSTS_PER_PAGE],
         ).fetchall()
-        return render_template('blog/index.html', posts=posts)
+        return render_template(
+            'blog/index.html', posts=posts, query=query, page=page, pages=pages
+        )
 
 .. code-block:: html+jinja
     :caption: ``flaskr/templates/blog/index.html``
@@ -99,6 +131,9 @@ available in the result.
     {% endblock %}
 
     {% block content %}
+      {% if not posts %}
+        <p>No posts found{% if query %} for "{{ query }}"{% endif %}.</p>
+      {% endif %}
       {% for post in posts %}
         <article class="post">
           <header>
@@ -116,6 +151,17 @@ available in the result.
           <hr>
         {% endif %}
       {% endfor %}
+      {% if pages > 1 %}
+        <nav class="pagination" aria-label="Pagination">
+          {% if page > 1 %}
+            <a href="{{ url_for('blog.index', q=query, page=page - 1) }}">Previous</a>
+          {% endif %}
+          <span>Page {{ page }} of {{ pages }}</span>
+          {% if page < pages %}
+            <a href="{{ url_for('blog.index', q=query, page=page + 1) }}">Next</a>
+          {% endif %}
+        </nav>
+      {% endif %}
     {% endblock %}
 
 When a user is logged in, the ``header`` block adds a link to the
