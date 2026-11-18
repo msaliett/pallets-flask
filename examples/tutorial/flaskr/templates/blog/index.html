@@ -8,6 +8,9 @@
 {% endblock %}
 
 {% block content %}
+  {% if not posts %}
+    <p>No posts found{% if query %} for "{{ query }}"{% endif %}.</p>
+  {% endif %}
   {% for post in posts %}
     <article class="post">
       <header>
@@ -25,4 +28,15 @@
       <hr>
     {% endif %}
   {% endfor %}
+  {% if pages > 1 %}
+    <nav class="pagination" aria-label="Pagination">
+      {% if page > 1 %}
+        <a href="{{ url_for('blog.index', q=query, page=page - 1) }}">Previous</a>
+      {% endif %}
+      <span>Page {{ page }} of {{ pages }}</span>
+      {% if page < pages %}
+        <a href="{{ url_for('blog.index', q=query, page=page + 1) }}">Next</a>
+      {% endif %}
+    </nav>
+  {% endif %}
 {% endblock %}

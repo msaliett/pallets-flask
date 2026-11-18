@@ -51,6 +51,10 @@ specific sections.
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <nav>
       <h1>Flaskr</h1>
+      <form action="{{ url_for('blog.index') }}" method="get">
+        <input type="search" name="q" value="{{ request.args.get('q', '') }}" placeholder="Search posts" aria-label="Search posts">
+        <button type="submit">Search</button>
+      </form>
       <ul>
         {% if g.user %}
           <li><span>{{ g.user['username'] }}</span>
