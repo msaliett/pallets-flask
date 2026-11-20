@@ -9,20 +9,20 @@ config:
 classDiagram
 direction LR
     class User {
-	    +id: int
-	    +username: String
-	    +password:String
+	    -id: int
+	    -username: String
+	    -password:String
 	    +register()
 	    +login()
         +logout()
     }
 
     class Post {
-	    +id: int
-	    +author_id: int
-	    +created: Timestamp
-	    +title: String 
-	    +body: String 
+	    -id: int
+	    -author_id: int
+	    -created: Timestamp
+	    -title: String 
+	    -body: String 
 	    +create()
 	    +update()
 	    +delete()
