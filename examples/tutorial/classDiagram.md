@@ -14,6 +14,7 @@ direction LR
 	    +password:String
 	    +register()
 	    +login()
+        +logout()
     }
 
     class Post {
